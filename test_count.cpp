@@ -1,9 +1,8 @@
 /**
- * This is the main file containing all calls to get all measures types from the station.
+ * This is the main file containing all calls to measure.
  * @author	Yvan FEREZ (Radiation-Survey-Lab.fr)
  * @license	GPL
- * @version 0.5.0b
- * @lastUpdateOn 2016-05-11
+ * @version 0.25.5b
 */
 #include <wiringPi.h>
 #include <iostream>
@@ -39,51 +38,11 @@
 
 	using namespace std;
 
-#include "BMP085.hpp"
-#include "mcp3008/mcp3008Spi.h"
-#include "DHT22/dht22.h"
-
 /* BEGIN OF MEASURE VARIABLES */
-unsigned int gcount = 0, currentPressureSeaLevel = 0;
-double currentPressure = 0, particuleLevel = 0, co2Level = 0;
-float currentTemperature = 0, currentTemperature22 = 0, currentHygrometry = 0, uvLevel = 0;
-ofstream errorLogFile;
-ofstream logFile;
-dht22 dht(DHT22PIN);
+unsigned int count = 0;
 /* END OF MEASURE VARIABLES */
 
-const std::string today_str(){
-	time_t now = time(0);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *localtime(&now);
-
-	strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
-
-	return buf;
-}
-
-const std::string currentDateTime(){
-	time_t now = time(0);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *localtime(&now);
-
-	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-
-	return buf;
-}
-
-bool log(string lvl, string message, bool nl=true){
-	const string errorLogFilePath = "/var/log/otal.log";
-
-	errorLogFile.open(errorLogFilePath.c_str(), fstream::app);
-
-	if(!errorLogFile.is_open()){
-		cerr << "Error: Error log file can't be opened!" << endl;
-		return INIT_FAILURE;
-	}
-	errorLogFile << '[' << currentDateTime() << " GMT] " << lvl << ": " << message;
+/*() << " GMT] " << lvl << ": " << message;
 	if(nl)
 		errorLogFile << endl;
 
@@ -121,10 +80,13 @@ std::vector<std::string> explode(std::string const & s, char delim){
     }
     return result;
 }
+*/
 
 void falling_state(){
-	gcount++;
+	cout << count++ << endl;
 }
+
+/*
 
 const std::string getHeaders(){
 	log("INFO", "Getting headers in config file... ", false);
@@ -144,11 +106,11 @@ const std::string getHeaders(){
 }
 
 PI_THREAD(activeLed){
-	/* BLINK! */
+	/* BLINK! 
 	while(1){
-		usleep(170);
+		usleep(1770);
 		digitalWrite(STATUS_LED_PIN, 0);
-		sleep(1);
+		usleep(1770);
 		digitalWrite(STATUS_LED_PIN, 1);
 	}
 }
@@ -163,98 +125,54 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
 	}
 	if(logFile.tellp() == 0)
 		logFile << getHeaders() << '\n';
-	logFile << gcount << ';' << currentPressure << ';' << currentTemperature << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentDateTime() << '\n';
+	logFile << count << ';' << currentPressure << ';' << currentTemperature << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentDateTime() << '\n';
 
 	logFile.close();
 	
 	return true;
 }
-
+*/
 int main(void){
 	int wPiReturn = 0;
-	time_t timer = time(0);
+	//time_t timer = time(0);
 	
-	log("INFO", "Starting init process Daemon...");
+	//log("INFO", "Starting init process Daemon...");
 
 	if((wPiReturn = wiringPiSetup()) == INIT_FAILURE){
-		log("ERROR", "wiringPiSetup() have failed! Aborting.");
+//		log("ERROR", "wiringPiSetup() have failed! Aborting.");
+		cout << 'no' << endl;
 		return INIT_FAILURE;
 	}
-
+/*
 	log("INFO", "GPIO utilities loaded.");
-
+	*/
 	pinMode(INTR_PIN, INPUT);
 	pullUpDnControl(INTR_PIN, PUD_UP);
-	pinMode(STATUS_LED_PIN, OUTPUT);
+	/* pinMode(STATUS_LED_PIN, OUTPUT);
 	pinMode(ENABLE_UV_MODULE_PIN, OUTPUT);
 	
 	log("INFO", "PIN states set.");
-	BMP085 *bcm;
-
-	try{
-		bcm = new BMP085(BMP085::OSS_ULTRAHIGH);
-		if(!bcm->ok) {
-			cerr << bcm->err << endl;
-			log("ERROR", bcm->err);
-			bcm = NULL;	
-		}
-	}
-	catch(const std::Exception &e){
-		cerr << "No BMP085 module detected! Will not be used." << endl;
-		log("ERROR", "No BMP085 module detected! Will not be used.");
-		bcm = NULL;
-	}
-
+	
+	BMP085 *bcm = new BMP085(BMP085::OSS_ULTRAHIGH);
 	// For rev. 1 Model B pis:
 	// BMP085 *bcm = new BMP085(oss, "/dev/i2c-0");
+	if(!bcm->ok) {
+		cerr << bcm->err << endl;
+		return 1;
+	}
 	bcm->hiRes = true;
 	log("INFO", "External modules set.");
-
-	wiringPiISR(INTR_PIN, INT_EDGE_FALLING, &falling_state);	// For geiger gcounter
-
+*/
+	wiringPiISR(INTR_PIN, INT_EDGE_FALLING, &falling_state);	// For geiger counter
+/*
 	if((piThreadCreate(activeLed)) != 0)		// Starting led thread
 		log("WARNING", "LED thread not started.");
 
 	log("INFO", "Starting routine sensor.");
 	int takes = 0;
-
+*/
 	while(1){
-		unsigned int delta_time = difftime(time(0), timer);
-		if(delta_time % REFRESH_SENSOR_DELAY_SEC == 0){ // Accumulate datas every REFRESH_SENSOR_DELAY_SEC !
-			/* Pressure + Temperature Sensor */
-			BMP085::reading data;
-			if(bcm != NULL)
-				data = bcm->getBoth();
-			currentPressure += (data.kPa)*1000;	// Converting into Pascal
-			currentTemperature += data.celcius;
-			
-			digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
-			usleep(5);	// Module WakeUp time.
-			uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
-			digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
-
-			dht.refresh();
-			currentHygrometry += dht.getHygrometry();
-			takes++;
-		}
-
-		if(delta_time >= 60){	// Check if the current minute is over
-
-			/* Cumulated data averaging */
-			currentPressure /= takes;
-			currentTemperature /= takes;
-			uvLevel /= takes;
-			currentHygrometry /= takes;
-
-			/* Logging computed datas */
-			record(logFile, errorLogFile);
-
-			/* Reset vars */
-			currentPressure = currentTemperature = currentTemperature22 = uvLevel = takes = 0;
-			gcount = 0;
-			timer = time(0);	// Reset timer
-		}
-		usleep(150);	// Don't take the load of the CPU.
+		;
 	}
 
 	return true;

@@ -26,9 +26,9 @@ using namespace std;
 int main(void){
     mcp3008Spi a2d("/dev/spidev0.0", SPI_MODE_0, 1000000, 8);
     int i = 20;
-        int a2dVal = 0;
-    int a2dChannel = 1;
-        unsigned char data[3];
+    int a2dVal = 0;
+    int a2dChannel = 0;
+    unsigned char data[3];
 
     while(i > 0)
     {
