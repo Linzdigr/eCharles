@@ -1,5 +1,6 @@
 /**
- * This is the main file containing all calls to get all measures types from the station.
+ * This is the main file containing calls to get all measures from the station.
+ * They are then logged into a daily file.
  * @author	Yvan FEREZ (Radiation-Survey-Lab.fr)
  * @license	GPL
  * @version 0.5.0b
@@ -22,22 +23,20 @@
 
 
 #ifndef INTR_PIN
-	#define INTR_PIN 				1
+  #define INTR_PIN 				          1
 #endif
-#define STATUS_LED_PIN 				0
-#define ENABLE_UV_MODULE_PIN		22
-#define DHT22PIN					2
-#define INIT_FAILURE				-1
-#define REFRESH_SENSOR_DELAY_SEC	5
-#define CNF_FILE 					"/etc/otal.cnf"
+#define STATUS_LED_PIN 				      0
+#define ENABLE_UV_MODULE_PIN		    22
+#define DHT22PIN					          2
+#define INIT_FAILURE				        -1
+#define REFRESH_SENSOR_DELAY_SEC	  5
+#define CNF_FILE 					          "/etc/otal.cnf"
 
+#define SOIL_MOISTURE_CHANNEL       3
 #define UV_ANALOG_CHANNEL           2
 #define DUST_ANALOG_CHANNEL         1
-#define CO2_ANALOG_CHANNEL          0
 
-#define MAXTIMINGS 85
-
-	using namespace std;
+  using namespace std;
 
 #include "BMP085.hpp"
 #include "mcp3008/mcp3008Spi.h"
@@ -46,50 +45,50 @@
 /* BEGIN OF MEASURE VARIABLES */
 unsigned int gcount = 0, currentPressureSeaLevel = 0;
 double currentPressure = 0, particuleLevel = 0, co2Level = 0;
-float currentTemperature = 0, currentTemperature22 = 0, currentHygrometry = 0, uvLevel = 0;
+float currentTemperature = 0, currentTemperature22 = 0, currentHygrometry = 0, uvLevel = 0, currentSoilMoisture = 0;
 ofstream errorLogFile;
 ofstream logFile;
 dht22 dht(DHT22PIN);
 /* END OF MEASURE VARIABLES */
 
 const std::string today_str(){
-	time_t now = time(0);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *localtime(&now);
+  time_t now = time(0);
+  struct tm tstruct;
+  char buf[80];
+  tstruct = *localtime(&now);
 
-	strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
+  strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
 
-	return buf;
+  return buf;
 }
 
 const std::string currentDateTime(){
-	time_t now = time(0);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *localtime(&now);
+  time_t now = time(0);
+  struct tm tstruct;
+  char buf[80];
+  tstruct = *localtime(&now);
 
-	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+  strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
 
-	return buf;
+  return buf;
 }
 
 bool log(string lvl, string message, bool nl=true){
-	const string errorLogFilePath = "/var/log/otal.log";
+  const string errorLogFilePath = "/var/log/otal.log";
 
-	errorLogFile.open(errorLogFilePath.c_str(), fstream::app);
+  errorLogFile.open(errorLogFilePath.c_str(), fstream::app);
 
-	if(!errorLogFile.is_open()){
-		cerr << "Error: Error log file can't be opened!" << endl;
-		return INIT_FAILURE;
-	}
-	errorLogFile << '[' << currentDateTime() << " GMT] " << lvl << ": " << message;
-	if(nl)
-		errorLogFile << endl;
+  if(!errorLogFile.is_open()){
+    cerr << "Error: Error log file can't be opened!" << endl;
+    return INIT_FAILURE;
+  }
+  errorLogFile << '[' << currentDateTime() << " GMT] " << lvl << ": " << message;
+  if(nl)
+    errorLogFile << endl;
 
-	errorLogFile.close();
+  errorLogFile.close();
 
-	return true;
+  return true;
 }
 
 int getAnalogChannelVal(int channel){
@@ -101,11 +100,11 @@ int getAnalogChannelVal(int channel){
     data[1] = 0b10000000 |( ((a2dChannel & 7) << 4)); // second byte transmitted -> (SGL/DIF = 1, D2=D1=D0=0)
     data[2] = 0; // third byte transmitted....don't care
 
-	a2d.spiWriteRead(data, sizeof(data) );
-	
-	a2dVal = 0;
-	a2dVal = (data[1]<< 8) & 0b1100000000; //merge data[1] & data[2] to get result
-	a2dVal |=  (data[2] & 0xff);
+  a2d.spiWriteRead(data, sizeof(data) );
+  
+  a2dVal = 0;
+  a2dVal = (data[1]<< 8) & 0b1100000000; //merge data[1] & data[2] to get result
+  a2dVal |=  (data[2] & 0xff);
     
     return a2dVal;
 }
@@ -123,139 +122,141 @@ std::vector<std::string> explode(std::string const & s, char delim){
 }
 
 void falling_state(){
-	gcount++;
+  gcount++;
 }
 
 const std::string getHeaders(){
-	log("INFO", "Getting headers in config file... ", false);
-	ifstream cnfFile;
-	string line;
+  log("INFO", "Getting headers in config file... ", false);
+  ifstream cnfFile;
+  string line;
 
-	cnfFile.open(CNF_FILE, fstream::in);
+  cnfFile.open(CNF_FILE, fstream::in);
 
-	while(getline(cnfFile, line)){
-		auto v = explode(line, '=');
-		if(v[0] == "CSVHEADER")
-			return v[1];
-	}
-	log("INFO", "[Done]");
+  while(getline(cnfFile, line)){
+    auto v = explode(line, '=');
+    if(v[0] == "CSVHEADER")
+      return v[1];
+  }
+  log("INFO", "[Done]");
 
-	return NULL;
+  return NULL;
 }
 
 PI_THREAD(activeLed){
-	/* BLINK! */
-	while(1){
-		usleep(170);
-		digitalWrite(STATUS_LED_PIN, 0);
-		sleep(1);
-		digitalWrite(STATUS_LED_PIN, 1);
-	}
+  /* BLINK STATUS ! */
+  while(1){
+    usleep(1000000);
+    digitalWrite(STATUS_LED_PIN, 0);
+    usleep(500000);
+    digitalWrite(STATUS_LED_PIN, 1);
+  }
 }
 
 bool record(ofstream &logFile, ofstream &errorLogFile){
-	string logFilePath = "/var/www/data_" + today_str() + ".log";
+  string logFilePath = "/var/www/data_" + today_str() + ".log";
 
-	logFile.open(logFilePath.c_str(), fstream::app);
-	if(!logFile.is_open()){
-		log("ERROR", "Log file can't be opened: check permissions or if file really exists");
-		return false;
-	}
-	if(logFile.tellp() == 0)
-		logFile << getHeaders() << '\n';
-	logFile << gcount << ';' << currentPressure << ';' << currentTemperature << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentDateTime() << '\n';
+  logFile.open(logFilePath.c_str(), fstream::app);
+  if(!logFile.is_open()){
+    log("ERROR", "Log file can't be opened: check permissions or if file really exists");
+    return false;
+  }
+  if(logFile.tellp() == 0)
+    logFile << getHeaders() << '\n';
+  logFile << gcount << ';' << currentPressure << ';' << currentTemperature << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentSoilMoisture << ';' << currentDateTime() << '\n';
 
-	logFile.close();
-	
-	return true;
+  logFile.close();
+  
+  return true;
 }
 
 int main(void){
-	int wPiReturn = 0;
-	time_t timer = time(0);
-	
-	log("INFO", "Starting init process Daemon...");
+  int wPiReturn = 0;
+  time_t timer = time(0);
+  
+  log("INFO", "Starting init process Daemon...");
 
-	if((wPiReturn = wiringPiSetup()) == INIT_FAILURE){
-		log("ERROR", "wiringPiSetup() have failed! Aborting.");
-		return INIT_FAILURE;
-	}
+  if((wPiReturn = wiringPiSetup()) == INIT_FAILURE){
+    log("ERROR", "wiringPiSetup() have failed! Aborting.");
+    return INIT_FAILURE;
+  }
 
-	log("INFO", "GPIO utilities loaded.");
+  log("INFO", "GPIO utilities loaded.");
 
-	pinMode(INTR_PIN, INPUT);
-	pullUpDnControl(INTR_PIN, PUD_UP);
-	pinMode(STATUS_LED_PIN, OUTPUT);
-	pinMode(ENABLE_UV_MODULE_PIN, OUTPUT);
-	
-	log("INFO", "PIN states set.");
-	BMP085 *bcm;
+  pinMode(INTR_PIN, INPUT);
+  pullUpDnControl(INTR_PIN, PUD_UP);
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  pinMode(ENABLE_UV_MODULE_PIN, OUTPUT);
+  
+  log("INFO", "PIN states set.");
+  BMP085 *bcm;
 
-	try{
-		bcm = new BMP085(BMP085::OSS_ULTRAHIGH);
-		if(!bcm->ok) {
-			cerr << bcm->err << endl;
-			log("ERROR", bcm->err);
-			bcm = NULL;	
-		}
-	}
-	catch(const std::Exception &e){
-		cerr << "No BMP085 module detected! Will not be used." << endl;
-		log("ERROR", "No BMP085 module detected! Will not be used.");
-		bcm = NULL;
-	}
+  try{
+    bcm = new BMP085(BMP085::OSS_ULTRAHIGH);
+    if(!bcm->ok) {
+      cerr << bcm->err << endl;
+      log("ERROR", bcm->err);
+      bcm = NULL;	
+    }
+  }
+  catch(const std::exception &e){
+    cerr << "No BMP085 module detected! Will not be used." << endl;
+    log("ERROR", "No BMP085 module detected! Will not be used.");
+    bcm = NULL;
+  }
 
-	// For rev. 1 Model B pis:
-	// BMP085 *bcm = new BMP085(oss, "/dev/i2c-0");
-	bcm->hiRes = true;
-	log("INFO", "External modules set.");
+  // For rev. 1 Model B pis:
+  // BMP085 *bcm = new BMP085(oss, "/dev/i2c-0");
+  bcm->hiRes = true;
+  log("INFO", "External modules set.");
 
-	wiringPiISR(INTR_PIN, INT_EDGE_FALLING, &falling_state);	// For geiger gcounter
+  wiringPiISR(INTR_PIN, INT_EDGE_FALLING, &falling_state);	// For geiger gcounter
 
-	if((piThreadCreate(activeLed)) != 0)		// Starting led thread
-		log("WARNING", "LED thread not started.");
+  if((piThreadCreate(activeLed)) != 0)		// Starting led thread
+    log("WARNING", "LED thread not started.");
 
-	log("INFO", "Starting routine sensor.");
-	int takes = 0;
+  log("INFO", "Starting routine sensor.");
+  int takes = 0;
 
-	while(1){
-		unsigned int delta_time = difftime(time(0), timer);
-		if(delta_time % REFRESH_SENSOR_DELAY_SEC == 0){ // Accumulate datas every REFRESH_SENSOR_DELAY_SEC !
-			/* Pressure + Temperature Sensor */
-			BMP085::reading data;
-			if(bcm != NULL)
-				data = bcm->getBoth();
-			currentPressure += (data.kPa)*1000;	// Converting into Pascal
-			currentTemperature += data.celcius;
-			
-			digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
-			usleep(5);	// Module WakeUp time.
-			uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
-			digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
+  while(1){
+    unsigned int delta_time = difftime(time(0), timer);
+    if(delta_time % REFRESH_SENSOR_DELAY_SEC == 0){ // Accumulate datas every REFRESH_SENSOR_DELAY_SEC !
+      /* Pressure + Temperature Sensor */
+      BMP085::reading data;
+      if(bcm != NULL)
+        data = bcm->getBoth();
+      currentPressure += (data.kPa)*1000;	// Converting into Pascal
+      currentTemperature += data.celcius;
+      
+      digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
+      usleep(5);	// Module WakeUp time.
+      uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
+      currentSoilMoisture += getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
+      digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
 
-			dht.refresh();
-			currentHygrometry += dht.getHygrometry();
-			takes++;
-		}
+      dht.refresh();
+      currentHygrometry += dht.getHygrometry();
+      takes++;
+    }
 
-		if(delta_time >= 60){	// Check if the current minute is over
+    if(delta_time >= 60){	// Check if the current minute is over
 
-			/* Cumulated data averaging */
-			currentPressure /= takes;
-			currentTemperature /= takes;
-			uvLevel /= takes;
-			currentHygrometry /= takes;
+      /* Cumulated data averaging */
+      currentPressure /= takes;
+      currentTemperature /= takes;
+      uvLevel /= takes;
+      currentHygrometry /= takes;
+      currentSoilMoisture /= takes;
 
-			/* Logging computed datas */
-			record(logFile, errorLogFile);
+      /* Logging computed datas */
+      record(logFile, errorLogFile);
 
-			/* Reset vars */
-			currentPressure = currentTemperature = currentTemperature22 = uvLevel = takes = 0;
-			gcount = 0;
-			timer = time(0);	// Reset timer
-		}
-		usleep(150);	// Don't take the load of the CPU.
-	}
+      /* Reset vars */
+      currentPressure = currentTemperature = currentTemperature22 = currentSoilMoisture = uvLevel = takes = 0;
+      gcount = 0;
+      timer = time(0);	// Reset timer
+    }
+    usleep(150);	// Don't take the load of the CPU.
+  }
 
-	return true;
+  return true;
 }
