@@ -28,6 +28,7 @@
 #define STATUS_LED_PIN 				      0
 #define ENABLE_UV_MODULE_PIN		    22
 #define DHT22PIN					          2
+#define WATERERING_PIN              12
 #define INIT_FAILURE				        -1
 #define REFRESH_SENSOR_DELAY_SEC	  5
 #define CNF_FILE 					          "/etc/otal.cnf"
@@ -35,6 +36,9 @@
 #define SOIL_MOISTURE_CHANNEL       3
 #define UV_ANALOG_CHANNEL           2
 #define DUST_ANALOG_CHANNEL         1
+
+#define SOIL_DRY_LIMIT              800
+#define SOIL_WET_LIMIT              600
 
   using namespace std;
 
@@ -50,6 +54,10 @@ ofstream errorLogFile;
 ofstream logFile;
 dht22 dht(DHT22PIN);
 /* END OF MEASURE VARIABLES */
+
+bool shouldWater = false;
+
+
 
 const std::string today_str(){
   time_t now = time(0);
@@ -186,6 +194,7 @@ int main(void){
   pullUpDnControl(INTR_PIN, PUD_UP);
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ENABLE_UV_MODULE_PIN, OUTPUT);
+  pinMode(WATERERING_PIN, OUTPUT);
   
   log("INFO", "PIN states set.");
   BMP085 *bcm;
@@ -221,6 +230,15 @@ int main(void){
     unsigned int delta_time = difftime(time(0), timer);
     if(delta_time % REFRESH_SENSOR_DELAY_SEC == 0){ // Accumulate datas every REFRESH_SENSOR_DELAY_SEC !
       /* Pressure + Temperature Sensor */
+      int soilMoisture = getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
+
+      /* Watering */
+      if(soilMoisture > SOIL_DRY_LIMIT) {
+        digitalWrite(WATERERING_PIN, 1);
+      } else if(soilMoisture < SOIL_WET_LIMIT) {
+        digitalWrite(WATERERING_PIN, 0);
+      }
+
       BMP085::reading data;
       if(bcm != NULL)
         data = bcm->getBoth();
@@ -230,7 +248,7 @@ int main(void){
       digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
       usleep(5);	// Module WakeUp time.
       uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
-      currentSoilMoisture += getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
+      currentSoilMoisture += soilMoisture;
       digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
 
       dht.refresh();
