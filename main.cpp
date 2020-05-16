@@ -28,7 +28,7 @@
 #define STATUS_LED_PIN              0
 #define ENABLE_UV_MODULE_PIN        22
 #define DHT22PIN                    2
-#define WATERERING_PIN              12
+#define WATERING_PIN              12
 #define INIT_FAILURE                -1
 #define REFRESH_SENSOR_DELAY_SEC    5
 #define CNF_FILE                    "/etc/otal.cnf"
@@ -37,7 +37,8 @@
 #define UV_ANALOG_CHANNEL           2
 #define DUST_ANALOG_CHANNEL         1
 
-#define SOIL_DRY_LIMIT              800
+// Extrem known values: 870 - 370
+#define SOIL_DRY_LIMIT              750
 #define SOIL_WET_LIMIT              600
 
   using namespace std;
@@ -54,10 +55,6 @@ ofstream errorLogFile;
 ofstream logFile;
 dht22 dht(DHT22PIN);
 /* END OF MEASURE VARIABLES */
-
-bool shouldWater = false;
-
-
 
 const std::string today_str(){
   time_t now = time(0);
@@ -100,13 +97,13 @@ bool log(string lvl, string message, bool nl=true){
 }
 
 int getAnalogChannelVal(int channel){
-    mcp3008Spi a2d("/dev/spidev0.0", SPI_MODE_0, 1000000, 8);
-    int a2dVal = 0;
-    int a2dChannel = channel;
-    unsigned char data[3];
-    data[0] = 1;  //  first byte transmitted -> start bit
-    data[1] = 0b10000000 |( ((a2dChannel & 7) << 4)); // second byte transmitted -> (SGL/DIF = 1, D2=D1=D0=0)
-    data[2] = 0; // third byte transmitted....don't care
+  mcp3008Spi a2d("/dev/spidev0.0", SPI_MODE_0, 1000000, 8);
+  int a2dVal = 0;
+  int a2dChannel = channel;
+  unsigned char data[3];
+  data[0] = 1;  //  first byte transmitted -> start bit
+  data[1] = 0b10000000 |( ((a2dChannel & 7) << 4)); // second byte transmitted -> (SGL/DIF = 1, D2=D1=D0=0)
+  data[2] = 0; // third byte transmitted....don't care
 
   a2d.spiWriteRead(data, sizeof(data) );
   
@@ -114,19 +111,19 @@ int getAnalogChannelVal(int channel){
   a2dVal = (data[1]<< 8) & 0b1100000000; //merge data[1] & data[2] to get result
   a2dVal |=  (data[2] & 0xff);
     
-    return a2dVal;
+  return a2dVal;
 }
 
 //bmp180 pressureSensor; // For .cpp bmp180 version only
 
 std::vector<std::string> explode(std::string const & s, char delim){
-    std::vector<std::string> result;
-    std::istringstream iss(s);
+  std::vector<std::string> result;
+  std::istringstream iss(s);
 
-    for (std::string token; std::getline(iss, token, delim); ){
-        result.push_back(std::move(token));
-    }
-    return result;
+  for (std::string token; std::getline(iss, token, delim); ){
+      result.push_back(std::move(token));
+  }
+  return result;
 }
 
 void falling_state(){
@@ -194,7 +191,9 @@ int main(void){
   pullUpDnControl(INTR_PIN, PUD_UP);
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ENABLE_UV_MODULE_PIN, OUTPUT);
-  pinMode(WATERERING_PIN, OUTPUT);
+  pinMode(WATERING_PIN, OUTPUT);
+
+  digitalWrite(WATERING_PIN, 1); // HIGH to inactive: normaly closed.
   
   log("INFO", "PIN states set.");
   BMP085 *bcm;
@@ -234,9 +233,9 @@ int main(void){
 
       /* Watering */
       if(soilMoisture > SOIL_DRY_LIMIT) {
-        digitalWrite(WATERERING_PIN, 1);
+        digitalWrite(WATERING_PIN, 0);
       } else if(soilMoisture < SOIL_WET_LIMIT) {
-        digitalWrite(WATERERING_PIN, 0);
+        digitalWrite(WATERING_PIN, 1);
       }
 
       BMP085::reading data;

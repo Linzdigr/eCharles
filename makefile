@@ -1,2 +1,29 @@
-g++ -c -Wall main.cpp BMP085.cpp
-g++ -o /etc/geigerDaemon main.o BMP085.o -std=c++0x -lm -lwiringPi
+PREFIX = /usr/local
+
+main.o: main.cpp
+	g++ -c -Wall main.cpp
+
+BMP085.o:
+	g++ -c -Wall BMP085.cpp
+
+dht22.o: DHT22/dht22.cpp
+	g++ -c -Wall DHT22/dht22.cpp
+
+mcp3008.o: mcp3008/mcp3008Spi.cpp
+	g++ -c -Wall mcp3008/mcp3008Spi.cpp
+
+echarles: main.o BMP085.o
+	g++ -o echarles main.o BMP085.o dht22.o mcp3008Spi.o -std=c++0x -lm -lwiringPi
+
+.PHONY: install
+install: echarles
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 echarles $(PREFIX)/bin
+
+.PHONY: uninstall
+uninstall:
+  rm -f $(DESTDIR)$(PREFIX)/bin/echarles
+
+.PHONY: clean
+clean:
+	rm -rf *.o
