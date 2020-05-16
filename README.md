@@ -1,8 +1,8 @@
-#eCharles
+# eCharles
 
 Raspberry Pi C++ home project with autonomous domotics depending on sensors value.
 
-##Prerequisites
+## Prerequisites
 This project requires wiringPi to be installed on your Pi (http://wiringpi.com/download-and-install/).
 
 Before going further, copy the conf file into /etc:
@@ -10,7 +10,7 @@ Before going further, copy the conf file into /etc:
 cp -a ./otal.cnf /etc/otal.cnf
 ```
 
-##Build & Installation
+## Build & Installation
 
 ```sh
 make
