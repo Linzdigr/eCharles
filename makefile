@@ -12,7 +12,7 @@ dht22.o: DHT22/dht22.cpp
 mcp3008.o: mcp3008/mcp3008Spi.cpp
 	g++ -c -Wall mcp3008/mcp3008Spi.cpp
 
-echarles: main.o BMP085.o
+echarles: main.o BMP085.o dht22.o mcp3008Spi.o
 	g++ -o echarles main.o BMP085.o dht22.o mcp3008Spi.o -std=c++0x -lm -lwiringPi
 
 .PHONY: install
@@ -22,7 +22,7 @@ install: echarles
 
 .PHONY: uninstall
 uninstall:
-  rm -f $(DESTDIR)$(PREFIX)/bin/echarles
+	rm -f $(DESTDIR)$(PREFIX)/bin/echarles
 
 .PHONY: clean
 clean:

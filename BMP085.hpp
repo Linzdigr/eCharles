@@ -1,5 +1,6 @@
 /* Simple, standalone class representing a Bosch Sensortec
- * BMP085 Digital Pressure sensor. */
+	* BMP085 Digital Pressure sensor.
+*/
 
 #ifndef CLASS_BMP085
 #define CLASS_BMP085

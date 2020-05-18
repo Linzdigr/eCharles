@@ -12,11 +12,11 @@
 
 class dht22{
 	private:
-		int dht22_dat[5];
+		int dht22_dat[5] = {};
 		static uint8_t sizecvt(const int);
-		float hygrometry;
-		float temperature;
-		int dht22_pin;
+		float hygrometry = 0;
+		float temperature = 0;
+		int dht22_pin = 0;
 	public:
 		dht22(int);
 		int refresh();

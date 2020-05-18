@@ -3,7 +3,7 @@ using namespace std;
 #include "dht22.h"
 
 dht22::dht22(int pin)
-:temperature(0), hygrometry(0),dht22_pin(pin), dht22_dat({0,0,0,0,0}){
+:temperature(0), hygrometry(0),dht22_pin(pin), dht22_dat{0,0,0,0,0} {
 
 }
 
@@ -23,7 +23,7 @@ int dht22::refresh(){
 	for(int i=0; i<=150; i++){
 		uint8_t laststate = HIGH;
 		uint8_t counter = 0;
-		uint8_t j = 0, i;
+		uint8_t j = 0;
 
 		dht22_dat[0] = dht22_dat[1] = dht22_dat[2] = dht22_dat[3] = dht22_dat[4] = 0;
 	
@@ -40,7 +40,7 @@ int dht22::refresh(){
 	  pinMode(this->dht22_pin, INPUT);
 	
 	  // detect change and read data
-	  for ( i=0; i< MAXTIMINGS; i++) {
+	  for (uint8_t i=0; i< MAXTIMINGS; i++) {
 	    counter = 0;
 	    while (sizecvt(digitalRead(this->dht22_pin)) == laststate) {
 	      counter++;
