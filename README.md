@@ -28,8 +28,7 @@ sudo usermod -aG docker ${USER}
 ```sh
 git clone https://github.com/Linzdigr/eCharles
 cd eCharles
-make
-make install
+sudo make install
 ```
 
 In order to the Pi to start the Daemon at boot time, you might want to add the following to your /etc/rc.local:
