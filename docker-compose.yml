@@ -10,7 +10,7 @@ services:
     networks:
       - echarles-front-net
     depends_on:
-      - app
+      - postgresql
     volumes:
       - ./nginx/conf:/etc/nginx
       - ./nginx/www:/var/www
