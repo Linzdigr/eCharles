@@ -23,6 +23,8 @@ sudo apt install docker-compose git libi2c-dev && \
 sudo usermod -aG docker ${USER}
 ```
 
+Also, to use Postgresql, you'll have to compile and install libpqxx: https://github.com/jtv/libpqxx
+
 ## Build & Installation
 
 ```sh

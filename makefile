@@ -4,12 +4,12 @@ main.o: main.cpp
 	g++ -c -Wall main.cpp
 
 BMP085.o:
-	g++ -c -Wall BMP085.cpp
+	g++ -c -Wall BMP085/BMP085.cpp
 
 dht22.o: DHT22/dht22.cpp
 	g++ -c -Wall DHT22/dht22.cpp
 
-mcp3008Spi.o: mcp3008/mcp3008Spi.cpp
+mcp3008Spi.o: MCP3008/mcp3008Spi.cpp
 	g++ -c -Wall mcp3008/mcp3008Spi.cpp
 
 echarles: main.o BMP085.o dht22.o mcp3008Spi.o

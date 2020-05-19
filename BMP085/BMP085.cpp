@@ -1,4 +1,4 @@
-#include "BMP085.hpp"
+#include "BMP085.h"
 #include "linux/i2c-dev.h"
 #include <i2c/smbus.h>
 #include <sys/ioctl.h>

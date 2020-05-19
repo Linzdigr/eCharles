@@ -1,3 +1,4 @@
 ./main
 ./eCharles
 *.o
+.vscode
