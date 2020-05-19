@@ -1,6 +1,6 @@
 # eCharles
 
-Raspberry Pi C++ home project with autonomous domotics depending on sensors value.
+Docker stack with Raspberry Pi C++ home project with autonomous domotics depending on sensors value.
 
 ## Prerequisites
 We recommend Raspberry Pi Model 3 to run this project.
@@ -9,7 +9,7 @@ WiringPi have to be installed: (http://wiringpi.com/download-and-install/).
 
 Before going further, copy the conf file into /etc:
 ```sh
-cp -a ./otal.cnf /etc/otal.cnf
+cp -a ./daemon/otal.cnf /etc/otal.cnf
 ```
 
 Now, we install Docker and docker-compose:
@@ -29,7 +29,7 @@ Also, to use Postgresql, you'll have to compile and install libpqxx: https://git
 
 ```sh
 git clone https://github.com/Linzdigr/eCharles
-cd eCharles
+cd eCharles/daemon
 sudo make install
 ```
 

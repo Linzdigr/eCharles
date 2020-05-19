@@ -1,0 +1,28 @@
+# default $GOPATH: /go.
+FROM golang:1.14.2-alpine3.11
+
+COPY ./src /go/src/echarles-api
+
+WORKDIR /go/src/echarles-api
+
+RUN go mod init
+
+RUN apk add git
+
+RUN go get github.com/gorilla/mux \
+    github.com/jinzhu/gorm \
+    github.com/dgrijalva/jwt-go \
+    github.com/lib/pq \
+    github.com/lib/pq/hstore \
+    golang.org/x/crypto/bcrypt \
+    github.com/go-playground/validator/v10 \
+    github.com/google/uuid \
+    github.com/gabriel-vasile/mimetype
+
+RUN go install echarles-api
+
+RUN apk del git
+
+ENTRYPOINT /go/bin/echarles-api
+
+EXPOSE 5555

@@ -15,8 +15,29 @@ services:
       - ./nginx/conf:/etc/nginx
       - ./nginx/www:/var/www
 
+  api:
+    image: golang-cherry-back:1.14.2-alpine3.11
+    restart: always
+    build:
+      context: ./API
+    environment:
+      - DB_USER=${POSTGRES_USER}
+      - DB_NAME=${POSTGRES_DB}
+      - DB_PASSWORD=${POSTGRES_PWD}
+      - DB_PORT=${POSTGRES_PORT}
+      - DB_HOSTNAME=${POSTGRES_HOSTNAME}
+      - DEBUG
+    networks:
+      - echarles-back-net
+      - echarles-front-net
+    network_mode: host
+    depends_on:
+      - postgresql
+    volumes:
+      - ${HOST_STORAGE_PATH}:/srv/storage
+
   postgresql:
-    image: postgis/postgis:12-3.0
+    image: postgresql:12.3-alpine
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -26,10 +47,10 @@ services:
     ports:
       - "${POSTGRES_PUBLISED_PORT}:${POSTGRES_PORT}"
     networks:
-      - cherry-back-net
+      - echarles-back-net
     volumes:
       - ${POSTGRES_HOST_DATA_PATH}:${PG_DOCKER_DATA_PATH}
-      - ./postgresql/20_cherry.communes.sql:/docker-entrypoint-initdb.d/20_cherry.communes.sql
+      - ./postgresql:/docker-entrypoint-initdb.d
 
 networks:
   cherry-back-net:
