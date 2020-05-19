@@ -2,3 +2,4 @@
 ./eCharles
 *.o
 .vscode
+.env
