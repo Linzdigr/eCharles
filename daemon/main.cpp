@@ -131,6 +131,11 @@ const std::string getHeaders() {
 
   cnfFile.open(CNF_FILE, fstream::in);
 
+  if(!logFile.is_open()) {
+    log("FATAL", "Header file can't be opened: check permissions or if file really exists");
+    exit(EXIT_FAILURE);
+  }
+
   while(getline(cnfFile, line)){
     auto v = explode(line, '=');
     if(v[0] == "CSVHEADER")

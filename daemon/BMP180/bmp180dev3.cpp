@@ -38,7 +38,6 @@
 #include <linux/i2c.h>
 #include <sys/ioctl.h>
 #include <math.h>
-#include <string>
 #include "bmp180dev3.h"
 
 #define sleepms(ms)  usleep((ms)*1000)
@@ -46,18 +45,18 @@
 	#define EXIT_FAILURE -1
 #endif
 
-#define I2CBus             "/dev/i2c-1"      //New Pi's
+char I2CBus[] = "/dev/i2c-1"; //New Pi's
 //#define I2CBus             "/dev/i2c-0"    //Old, but not stale Pi's
 
 
 	// Returns a file id for the port/bus
-	int i2c_Open(std::string I2CBusName){
+	int i2c_Open(char *I2CBusName){
 		int fd;
 		//Open port for reading and writing
-		if ((fd = open(I2CBusName.c_str(), O_RDWR)) < 0){
+		if ((fd = open(I2CBusName, O_RDWR)) < 0){
 			printf ("\n");
 			printf ("%s : Failed to open the i2c bus, error : %d\n",__func__,errno);
-			printf ("Check to see if you have a bus: %s\n", I2CBusName.c_str());
+			printf ("Check to see if you have a bus: %s\n", I2CBusName);
 			printf ("This is not a slave device problem, I can not find the bus/port with which to talk to the device\n");
 			printf ("\n");
 			// Only one of the following lines should be used
