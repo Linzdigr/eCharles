@@ -41,4 +41,5 @@ class bmp180 {
 		double  bmp_qnh              	(double p,double StationAlt);
 		double  ppl_DensityAlt       	(double PAlt,double Temp);
 		double	getRealPressure			(void);
+		double  getRealTemperature  (void);
 };

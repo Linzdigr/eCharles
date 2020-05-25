@@ -282,3 +282,15 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 
 		return pressure;
 	}
+
+	double bmp180::getRealTemperature() {
+		int fd;
+		double temperature;
+		fd = i2c_Open(I2CBus);
+		
+		if(this->bmp_Calibration(fd) != 0)
+			return -1;
+		this->bmp_GetTemperature(fd, &temperature);
+
+		return temperature;
+	}
