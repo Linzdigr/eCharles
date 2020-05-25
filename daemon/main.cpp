@@ -21,14 +21,13 @@
 #include <vector>
 #include <utility>
 
-
 #ifndef INTR_PIN
   #define INTR_PIN                  1
 #endif
 #define STATUS_LED_PIN              0
 #define ENABLE_UV_MODULE_PIN        22
 #define DHT22PIN                    2
-#define WATERING_PIN                12
+#define WATERING_PIN                26
 #define INIT_FAILURE                -1
 #define REFRESH_SENSOR_DELAY_SEC    5
 #define CNF_FILE                    "/etc/otal.cnf"
