@@ -183,8 +183,7 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
 
 void refreshSensorValues() {
   if(bmp != NULL) {
-    currentPressure += bmp->bmp_GetPressure() * 1000;
-    currentTemperature += bmp->bmp_GetTemperature();
+    currentPressure += bmp->getRealPressure();
   }
 
   digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
@@ -197,6 +196,7 @@ void refreshSensorValues() {
 
   dht.refresh();
   currentHygrometry += dht.getHygrometry();
+  currentTemperature += dht.getTemperature();
 
   if(!firstSensingCycle) {
     currentPressure /= 2;
