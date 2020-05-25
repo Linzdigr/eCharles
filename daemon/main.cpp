@@ -192,8 +192,6 @@ void refreshSensorValues() {
   currentSoilMoisture += getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
   digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
 
-  cout << "Soil moisture: " << currentSoilMoisture << endl;
-
   dht.refresh();
   currentHygrometry += dht.getHygrometry();
   currentTemperature += dht.getTemperature();
