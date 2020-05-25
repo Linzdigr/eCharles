@@ -12,7 +12,7 @@
 
 const unsigned char BMPx8x_OverSampling = 3;
 
-class bmp180{
+class bmp180 {
 	// Calibration values - These are stored in the BMP085/180
 	private:
 		short int            bmp_ac1;

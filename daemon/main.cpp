@@ -43,7 +43,7 @@
 
   using namespace std;
 
-#include "BMP085/BMP085.h"
+#include "BMP180/bmp180dev3.h"
 #include "MCP3008/mcp3008Spi.h"
 #include "DHT22/dht22.h"
 
@@ -55,7 +55,7 @@ bool firstSensingCycle = true;
 ofstream errorLogFile;
 ofstream logFile;
 dht22 dht(DHT22PIN);
-BMP085 *bcm;
+bmp180 *bmp;
 /* END OF MEASURE VARIABLES */
 
 const std::string nowStr(bool with_time = false) {
@@ -182,14 +182,11 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
 }
 
 void refreshSensorValues() {
+  if(bmp != NULL) {
+    currentPressure += bmp->bmp_GetPressure() * 1000;
+    currentTemperature += bmp->bmp_GetTemperature();
+  }
 
-  BMP085::reading data;
-
-  if(bcm != NULL)
-    data = bcm->getBoth();
-  currentPressure += (data.kPa)*1000;	// Converting into Pascal
-  currentTemperature += data.celcius;
-  
   digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
   usleep(5);	// Module WakeUp time.
   uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
@@ -237,23 +234,18 @@ int init() {
   log("INFO", "PIN states set.");
 
   try{
-    bcm = new BMP085(BMP085::OSS_ULTRAHIGH);
-    if(!bcm->ok) {
-      cerr << bcm->err << endl;
-      log("ERROR", bcm->err);
-      bcm = NULL;	
-    }
+    bmp = new bmp180();
   }
   catch(const std::exception &e){
     cerr << "No BMP085 module detected! Will not be used." << endl;
     log("ERROR", "No BMP085 module detected! Will not be used.");
-    bcm = NULL;
+    bmp = NULL;
   }
 
   // For rev. 1 Model B pis:
-  // BMP085 *bcm = new BMP085(oss, "/dev/i2c-0");
-  if(bcm != NULL) {
-    bcm->hiRes = true;
+  // BMP085 *bmp = new BMP085(oss, "/dev/i2c-0");
+  if(bmp == NULL) {
+    cout << "BMP module not instancited !" << endl;
   }
 
   log("INFO", "External modules set.");
