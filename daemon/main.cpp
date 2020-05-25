@@ -131,7 +131,7 @@ const std::string getHeaders() {
 
   cnfFile.open(CNF_FILE, fstream::in);
 
-  if(!logFile.is_open()) {
+  if(!cnfFile.is_open()) {
     log("FATAL", "Header file can't be opened: check permissions or if file really exists");
     exit(EXIT_FAILURE);
   }
