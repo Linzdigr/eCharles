@@ -154,13 +154,14 @@ PI_THREAD(activeLed) {
 
 PI_THREAD(wateringProcess) {
   /* Watering */
-  if(currentSoilMoisture > SOIL_DRY_LIMIT) {
-    digitalWrite(WATERING_PIN, 0);
-  } else if(currentSoilMoisture < SOIL_WET_LIMIT) {
-    digitalWrite(WATERING_PIN, 1);
+  while(1){
+    if(currentSoilMoisture > SOIL_DRY_LIMIT) {
+      digitalWrite(WATERING_PIN, 0);
+    } else if(currentSoilMoisture < SOIL_WET_LIMIT) {
+      digitalWrite(WATERING_PIN, 1);
+    }
+    usleep(150000);
   }
-
-  return;
 }
 
 bool record(ofstream &logFile, ofstream &errorLogFile){
