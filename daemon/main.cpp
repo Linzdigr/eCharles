@@ -67,7 +67,7 @@ const std::string nowStr(bool with_time = false) {
   if(with_time) {
     strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
   } else {
-    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct)
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
   }
 
   return buf;
@@ -159,6 +159,8 @@ PI_THREAD(wateringProcess) {
   } else if(currentSoilMoisture < SOIL_WET_LIMIT) {
     digitalWrite(WATERING_PIN, 1);
   }
+
+  return;
 }
 
 bool record(ofstream &logFile, ofstream &errorLogFile){
@@ -266,6 +268,8 @@ int init() {
   if((piThreadCreate(wateringProcess)) != 0) {		// Starting watering thread
     log("WARNING", "Watering thread not started.");
   }
+
+  return 0;
 }
 
 int main(void){
