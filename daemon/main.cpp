@@ -154,9 +154,9 @@ PI_THREAD(activeLed) {
 
 PI_THREAD(wateringProcess) {
   /* Watering */
-  if(soilMoisture > SOIL_DRY_LIMIT) {
+  if(currentSoilMoisture > SOIL_DRY_LIMIT) {
     digitalWrite(WATERING_PIN, 0);
-  } else if(soilMoisture < SOIL_WET_LIMIT) {
+  } else if(currentSoilMoisture < SOIL_WET_LIMIT) {
     digitalWrite(WATERING_PIN, 1);
   }
 }
@@ -193,6 +193,8 @@ void refreshSensorValues() {
   currentSoilMoisture += getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
   digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
 
+  cout << "Soil moisture: " << currentSoilMoisture << endl;
+
   dht.refresh();
   currentHygrometry += dht.getHygrometry();
 
@@ -211,7 +213,6 @@ void refreshSensorValues() {
 
 int init() {
   int wPiReturn = 0;
-  time_t timer = time(0);
   
   log("INFO", "Starting init process Daemon...");
 
@@ -268,6 +269,7 @@ int init() {
 }
 
 int main(void){
+  time_t timer = time(0);
   init();
 
   log("INFO", "Starting routine sensor.");
