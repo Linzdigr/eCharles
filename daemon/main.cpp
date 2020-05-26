@@ -178,7 +178,7 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
   }
   if(logFile.tellp() == 0)
     logFile << getHeaders() << '\n';
-  logFile << gcount << ';' << currentPressure << ';' << currentTemperature << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentSoilMoisture << ';' << nowStr(true) << '\n';
+  logFile << gcount << ';' << currentPressure << ';' << ((currentTemperature + currentTemperature22) / 2.0) << ';' << currentHygrometry << ';' <<  uvLevel << ';' << currentSoilMoisture << ';' << nowStr(true) << '\n';
 
   logFile.close();
   
