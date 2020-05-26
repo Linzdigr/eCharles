@@ -187,27 +187,19 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
 
 void refreshSensorValues() {
   if(bmp != NULL) {
-    currentTemperature += bmp->getRealTemperature();
-    currentPressure += bmp->getRealPressure();
+    currentTemperature = bmp->getRealTemperature();
+    currentPressure = bmp->getRealPressure();
   }
 
   digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
   usleep(5);	// Module WakeUp time.
-  uvLevel += getAnalogChannelVal(UV_ANALOG_CHANNEL);
-  currentSoilMoisture += getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
+  uvLevel = getAnalogChannelVal(UV_ANALOG_CHANNEL);
+  currentSoilMoisture = getAnalogChannelVal(SOIL_MOISTURE_CHANNEL);
   digitalWrite(ENABLE_UV_MODULE_PIN, LOW);	// Sleep mode
 
   dht.refresh();
-  currentHygrometry += dht.getHygrometry();
-  currentTemperature22 += dht.getTemperature();
-
-  if(!firstSensingCycle) {
-    currentPressure /= 2;
-    currentTemperature /= 2;
-    uvLevel /= 2;
-    currentHygrometry /= 2;
-    currentSoilMoisture /= 2;
-  }
+  currentHygrometry = dht.getHygrometry();
+  currentTemperature22 = dht.getTemperature();
 
   firstSensingCycle = false;
 
