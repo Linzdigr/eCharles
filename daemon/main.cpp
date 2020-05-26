@@ -185,10 +185,16 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
   return true;
 }
 
-void refreshSensorValues() {
+int refreshSensorValues() {
   if(bmp != NULL) {
-    currentTemperature = bmp->getRealTemperature();
-    currentPressure = bmp->getRealPressure();
+    try {
+      currentTemperature = bmp->getRealTemperature();
+      currentPressure = bmp->getRealPressure();
+    } catch(const std::runtime_error& e) {
+      log("Error", e.what());
+
+      return -1;
+    }    
   }
 
   digitalWrite(ENABLE_UV_MODULE_PIN, HIGH); // Set the uv module to active mode.
@@ -203,7 +209,7 @@ void refreshSensorValues() {
 
   firstSensingCycle = false;
 
-  return;
+  return 0;
 }
 
 int init() {
@@ -262,6 +268,7 @@ int init() {
 
 int main(void){
   time_t timer = time(0);
+  int refresh_ret_code = 0;
   init();
 
   log("INFO", "Starting routine sensor.");
@@ -269,13 +276,15 @@ int main(void){
   while(1){
     unsigned int delta_time = difftime(time(0), timer);
     if(delta_time % REFRESH_SENSOR_DELAY_SEC == 0){ // Accumulate datas every REFRESH_SENSOR_DELAY_SEC !
-      refreshSensorValues();
+      refresh_ret_code = refreshSensorValues();
     }
 
-    if(delta_time >= 60){	// Check if the current minute is over
+    if(delta_time >= 60) {	// Check if the current minute is over
 
-      /* Logging computed datas */
-      record(logFile, errorLogFile);
+      if(refresh_ret_code == 0) {
+        /* Logging computed datas */
+        record(logFile, errorLogFile);
+      }
 
       /* Reset vars */
       // currentPressure = currentTemperature = currentTemperature22 = currentSoilMoisture = uvLevel = 0;

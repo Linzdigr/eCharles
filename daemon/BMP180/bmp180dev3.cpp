@@ -38,6 +38,7 @@
 #include <linux/i2c.h>
 #include <sys/ioctl.h>
 #include <math.h>
+#include <stdexcept>
 #include "bmp180dev3.h"
 
 #define sleepms(ms)  usleep((ms)*1000)
@@ -61,8 +62,8 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 			printf ("\n");
 			// Only one of the following lines should be used
 			// the second line allows you to retry another bus, PS disable all the printf 's
-			exit(1);      //Use this line if the function must terminate on failure
-			//return fd;  //Use this line if it must return to the caller for processing
+			// exit(1);      //Use this line if the function must terminate on failure
+			return fd;  //Use this line if it must return to the caller for processing
 		}
 		else
 			return fd;
@@ -275,6 +276,10 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 		int fd;
 		double pressure;
 		fd = i2c_Open(I2CBus);
+
+		if(fd < 0) {
+			throw std::runtime_error("I2C bus wasn't accessible.");
+		}		
 		
 		if(this->bmp_Calibration(fd) != 0)
 			return -1;
@@ -287,6 +292,10 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 		int fd;
 		double temperature;
 		fd = i2c_Open(I2CBus);
+
+		if(fd < 0) {
+			throw std::runtime_error("I2C bus wasn't accessible.");
+		}		
 		
 		if(this->bmp_Calibration(fd) != 0)
 			return -1;
