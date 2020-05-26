@@ -187,6 +187,7 @@ bool record(ofstream &logFile, ofstream &errorLogFile){
 
 void refreshSensorValues() {
   if(bmp != NULL) {
+    currentTemperature += bmp->getRealTemperature();
     currentPressure += bmp->getRealPressure();
   }
 
@@ -198,7 +199,7 @@ void refreshSensorValues() {
 
   dht.refresh();
   currentHygrometry += dht.getHygrometry();
-  currentTemperature += dht.getTemperature();
+  currentTemperature22 += dht.getTemperature();
 
   if(!firstSensingCycle) {
     currentPressure /= 2;

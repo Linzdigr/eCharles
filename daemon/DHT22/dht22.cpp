@@ -33,9 +33,9 @@ int dht22::refresh(){
 		delay(10);
 	  digitalWrite(this->dht22_pin, LOW);
 	  delay(18);
-	  // then pull it up for 40 microseconds
+	  // then pull it up for 20-40 microseconds
 	  digitalWrite(this->dht22_pin, HIGH);
-	  delayMicroseconds(40); 
+	  delayMicroseconds(30); 
 	  // prepare to read the pin
 	  pinMode(this->dht22_pin, INPUT);
 	
@@ -57,7 +57,7 @@ int dht22::refresh(){
 	    if ((i >= 4) && (i%2 == 0)) {
 	      // shove each bit into the storage bytes
 	      dht22_dat[j/8] <<= 1;
-	      if (counter > 16)
+	      if (counter > 30)
 	        dht22_dat[j/8] |= 1;
 	      j++;
 	    }
@@ -66,7 +66,7 @@ int dht22::refresh(){
 	  // check we read 40 bits (8bit x 5 ) + verify checksum in the last byte
 	  // print it out if data is good
 	  if ((j >= 40) && 
-	      (dht22_dat[4] == ((dht22_dat[0] + dht22_dat[1] + dht22_dat[2] + dht22_dat[3]) & 0xFF)) ) {
+	       (dht22_dat[4] == ((dht22_dat[0] + dht22_dat[1] + dht22_dat[2] + dht22_dat[3]) & 0xFF)) ) {
 	        float t, h;
 	        h = (float)dht22_dat[0] * 256 + (float)dht22_dat[1];
 	        h /= 10;
