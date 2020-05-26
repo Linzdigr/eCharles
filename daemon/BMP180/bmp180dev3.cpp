@@ -1,4 +1,4 @@
-/*  (Dev)   -  (Pi)
+	/*  (Dev)   -  (Pi)
     SDA     -  SDA
     SCL     -  SCL
     GND     -  GND
@@ -56,7 +56,7 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 		//Open port for reading and writing
 		if ((fd = open(I2CBusName, O_RDWR)) < 0){
 			printf ("\n");
-			printf ("%s : Failed to open the i2c bus, error : %d\n",__func__,errno);
+			printf ("%s : Failed to open the i2c bus, error : %d\n", __func__, errno);
 			printf ("Check to see if you have a bus: %s\n", I2CBusName);
 			printf ("This is not a slave device problem, I can not find the bus/port with which to talk to the device\n");
 			printf ("\n");
@@ -279,11 +279,16 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 
 		if(fd < 0) {
 			throw std::runtime_error("I2C bus wasn't accessible.");
-		}		
+		}
 		
-		if(this->bmp_Calibration(fd) != 0)
+		if(this->bmp_Calibration(fd) != 0) {
+			close(fd);
 			return -1;
+		}
+
 		this->bmp_GetPressure(fd, &pressure);
+
+		close(fd);
 
 		return pressure;
 	}
@@ -295,11 +300,16 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 
 		if(fd < 0) {
 			throw std::runtime_error("I2C bus wasn't accessible.");
-		}		
+		}
 		
-		if(this->bmp_Calibration(fd) != 0)
+		if(this->bmp_Calibration(fd) != 0) {
+			close(fd);
 			return -1;
+		}
+
 		this->bmp_GetTemperature(fd, &temperature);
+
+		close(fd);
 
 		return temperature;
 	}
