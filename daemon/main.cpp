@@ -149,9 +149,9 @@ const std::string getHeaders() {
 PI_THREAD(activeLed) {
   /* BLINK STATUS ! */
   while(1){
-    usleep(1000000);
+    usleep(750000);
     digitalWrite(STATUS_LED_PIN, 0);
-    usleep(500000);
+    usleep(100000);
     digitalWrite(STATUS_LED_PIN, 1);
   }
 }
@@ -161,7 +161,7 @@ PI_THREAD(wateringProcess) {
   while(1){
     if(currentSoilMoisture > SOIL_DRY_LIMIT) {
       digitalWrite(WATERING_PIN, 0);
-    } else if(currentSoilMoisture < SOIL_WET_LIMIT) {
+    } else if(currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0) { // Don't care about 0 value
       digitalWrite(WATERING_PIN, 1);
     }
     usleep(150000);
@@ -278,7 +278,7 @@ int main(void){
       record(logFile, errorLogFile);
 
       /* Reset vars */
-      currentPressure = currentTemperature = currentTemperature22 = currentSoilMoisture = uvLevel = 0;
+      // currentPressure = currentTemperature = currentTemperature22 = currentSoilMoisture = uvLevel = 0;
       firstSensingCycle = true;
       gcount = 0;
       timer = time(0);	// Reset timer
