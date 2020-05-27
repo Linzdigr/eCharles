@@ -156,6 +156,10 @@ const std::string getHeaders() {
   return NULL;
 }
 
+bool hasExceededPeriod() {
+  return (is_watering && difftime(time(0), watering_started_since) > MAX_WATERING_DURATION_S);
+}
+
 PI_THREAD(activeLed) {
   /* BLINK STATUS ! */
   while(1) {
@@ -184,10 +188,6 @@ PI_THREAD(wateringProcess) {
     }
     usleep(150000);
   }
-}
-
-bool hasExceededPeriod() {
-  return (is_watering && difftime(time(0), watering_started_since) > MAX_WATERING_DURATION_S);
 }
 
 bool record(ofstream &logFile, ofstream &errorLogFile) {
