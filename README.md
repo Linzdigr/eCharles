@@ -21,6 +21,7 @@ sudo apt install raspberrypi-kernel raspberrypi-kernel-headers && \
 (sudo curl -sSL https://get.docker.com | sh) && \
 sudo apt install docker-compose git libi2c-dev && \
 sudo usermod -aG docker ${USER}
+newgrp docker
 ```
 
 Also, to use Postgresql, you'll have to compile and install libpqxx: https://github.com/jtv/libpqxx
