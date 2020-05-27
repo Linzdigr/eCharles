@@ -51,7 +51,7 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 
 
 	// Returns a file id for the port/bus
-	int i2c_Open(char *I2CBusName){
+	int bmp180::i2c_Open(char *I2CBusName) {
 		int fd;
 		//Open port for reading and writing
 		if ((fd = open(I2CBusName, O_RDWR)) < 0){
@@ -69,11 +69,15 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 			return fd;
 	}
 
-	bmp180::bmp180(){	// For new call
+	bmp180::bmp180() {	// For new call
+		this->fd = this->i2c_Open(I2CBus);
 
+		if(this->fd < 0) {
+			throw std::runtime_error("I2C bus wasn't accessible.");
+		}
 	}
 
-	int bmp180::bmp_ReadInt(int fd, uint8_t *devValues,uint8_t startReg,uint8_t bytesToRead){
+	int bmp180::bmp_ReadInt(int fd, uint8_t *devValues,uint8_t startReg,uint8_t bytesToRead) {
 	  int rc;
 	  struct i2c_rdwr_ioctl_data messagebuffer;
 
@@ -88,23 +92,23 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 	  messagebuffer.nmsgs = 2;                  //Two message/action
 	  messagebuffer.msgs = read_reg;            //load the 'read__reg' message into the buffer
 	  rc = ioctl(fd, I2C_RDWR, &messagebuffer); //Send the buffer to the bus and returns a send status
-	  if (rc < 0 ){
-		printf("\n");
-		printf("%s :Reg Read command failed with error :%d\n",__func__,errno);
-		printf("This means that device with address :0x%0x failed to receive this command\n",BMPx8x_I2CADDR);
-		printf("This command was preceded by a reset if that worked\n");
-		printf("and this failed, then possible causes are Delay timing to short (overclock stuffing timing up)\n");
-		printf("or bus unstable ,wire length,power supply unstable, terminating resistors.\n");
-		printf("\n");
-		// Only one of the following lines should be used
-		//exit(1);       //Use this line if the function must terminate on failure
-		return rc;       //Use this line if it must return to the caller for processing
+	  if (rc < 0 ) {
+			printf("\n");
+			printf("%s :Reg Read command failed with error :%d\n",__func__,errno);
+			printf("This means that device with address :0x%0x failed to receive this command\n",BMPx8x_I2CADDR);
+			printf("This command was preceded by a reset if that worked\n");
+			printf("and this failed, then possible causes are Delay timing to short (overclock stuffing timing up)\n");
+			printf("or bus unstable ,wire length,power supply unstable, terminating resistors.\n");
+			printf("\n");
+			// Only one of the following lines should be used
+			//exit(1);       //Use this line if the function must terminate on failure
+			return rc;       //Use this line if it must return to the caller for processing
 	  }
 	  //note that the return data is contained in the array pointed to by devValues (passed by-ref)
 	  return 0;
 	}
 
-	int bmp180::bmp_WriteCmd(int fd, uint8_t devAction){
+	int bmp180::bmp_WriteCmd(int fd, uint8_t devAction) {
 	  int rc;
 	  struct i2c_rdwr_ioctl_data messagebuffer;
 	  uint8_t datatosend[2];
@@ -121,25 +125,24 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 	  messagebuffer.msgs = write_reg;           //load the 'write__reg' message into the buffer
 	  rc = ioctl(fd, I2C_RDWR, &messagebuffer); //Send the buffer to the bus and returns a send status
 	  if (rc < 0 ){
-		printf("\n");
-		printf("%s :Write reg command failed with error :%d\n",__func__,errno);
-		printf("This means that device with address :0x%0x failed to receive this command\n",BMPx8x_I2CADDR);
-		printf("This command was preceded by a reset if that worked\n");
-		printf("and this failed, then possible causes are Delay timing to short (overclock stuffing timing up)\n");
-		printf("or bus unstable ,wire length,power supply unstable, terminating resistors.\n");
-		printf("\n");
-		// Only one of the following lines should be used
-		//exit(1);       //Use this line if the function must terminate on failure
-		return rc;       //Use this line if it must return to the caller for processing
+			printf("\n");
+			printf("%s :Write reg command failed with error :%d\n",__func__,errno);
+			printf("This means that device with address :0x%0x failed to receive this command\n",BMPx8x_I2CADDR);
+			printf("This command was preceded by a reset if that worked\n");
+			printf("and this failed, then possible causes are Delay timing to short (overclock stuffing timing up)\n");
+			printf("or bus unstable ,wire length,power supply unstable, terminating resistors.\n");
+			printf("\n");
+			// Only one of the following lines should be used
+			//exit(1);       //Use this line if the function must terminate on failure
+			return rc;       //Use this line if it must return to the caller for processing
 	  }
 	  return 0;
 	}
 
-	int bmp180::bmp_Calibration(int fd)
-	{
+	int bmp180::bmp_Calibration(int fd) {
 	  uint8_t rValue[21];
 	  //printf("Entering Calibration\n");
-	  if (bmp_ReadInt(fd,rValue,0xAA,22) == 0){
+	  if (bmp_ReadInt(fd,rValue,0xAA,22) == 0) {
 		bmp_ac1=((rValue[0]<<8)|rValue[1]);
 		bmp_ac2=((rValue[2]<<8)|rValue[3]);
 		 bmp_ac3=((rValue[4]<<8)|rValue[5]);
@@ -169,23 +172,22 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 	  return -1;
 	}
 
-	int bmp180::WaitForConversion(int fd){
+	int bmp180::WaitForConversion(int fd) {
 	  uint8_t rValues[3];
 	  int counter=0;
 	  //Delay can now be reduced by checking that bit 5 of Ctrl_Meas(0xF4) == 0
-	  do{
+	  do {
 		sleepms (BMPx8x_RetryDelay);
 		if (this->bmp_ReadInt(fd,rValues,BMPx8x_CtrlMeas,1) != 0 ) return -1;
 		counter++;
 		//printf("GetPressure:\t Loop:%i\trValues:0x%0x\n",counter,rValues[0]);
-	  }while ( ((rValues[0] & 0x20) != 0)  &&  counter < 20 );  
+	  } while ( ((rValues[0] & 0x20) != 0)  &&  counter < 20 );  
 	  return 0;
 	}
 
 	// Calculate calibrated pressure 
 	// Value returned will be in hPa
-	int bmp180::bmp_GetPressure(int fd, double *Pres)
-	{
+	int bmp180::bmp_GetPressure(int fd, double *Pres) {
 	  unsigned int up;  
 	  uint8_t rValues[3];
 		
@@ -234,8 +236,7 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 
 	// Calculate calibrated temperature
 	// Value returned will be in units of 0.1 deg C
-	int bmp180::bmp_GetTemperature(int fd, double *Temp)
-	{
+	int bmp180::bmp_GetTemperature(int fd, double *Temp) {
 	  unsigned int ut;
 	  uint8_t rValues[2];
 	  
@@ -257,59 +258,47 @@ char I2CBus[] = "/dev/i2c-1"; //New Pi's
 	  return 0;
 	}
 
-	double bmp180::bmp_altitude(double p){
+	double bmp180::bmp_altitude(double p) {
 	  return 145437.86*(1- pow((p/1013.25),0.190294496)); //return feet
 	  //return 44330*(1- pow((p/1013.25),0.190294496)); //return meters
 	}
 
-	double bmp180::bmp_qnh(double p,double StationAlt){
+	double bmp180::bmp_qnh(double p,double StationAlt) {
 	  return p / pow((1-(StationAlt/145437.86)),5.255) ; //return hPa based on feet
 	  //return p / pow((1-(StationAlt/44330)),5.255) ; //return hPa based on feet
 	}
 
-	double bmp180::ppl_DensityAlt(double PAlt,double Temp){
+	double bmp180::ppl_DensityAlt(double PAlt,double Temp) {
 	  double ISA = 15 - (1.98*(PAlt/1000));
 	  return PAlt+(120*(Temp-ISA)); //So,So density altitude
 	}
-	
-	double bmp180::getRealPressure(){
-		int fd;
-		double pressure;
-		fd = i2c_Open(I2CBus);
 
-		if(fd < 0) {
-			throw std::runtime_error("I2C bus wasn't accessible.");
-		}
+	double bmp180::getRealPressure() {
+		double pressure;
 		
-		if(this->bmp_Calibration(fd) != 0) {
-			close(fd);
+		if(this->bmp_Calibration(this->fd) != 0) {
 			return -1;
 		}
 
-		this->bmp_GetPressure(fd, &pressure);
-
-		close(fd);
+		this->bmp_GetPressure(this->fd, &pressure);
 
 		return pressure;
 	}
 
 	double bmp180::getRealTemperature() {
-		int fd;
 		double temperature;
-		fd = i2c_Open(I2CBus);
-
-		if(fd < 0) {
-			throw std::runtime_error("I2C bus wasn't accessible.");
-		}
 		
-		if(this->bmp_Calibration(fd) != 0) {
-			close(fd);
+		if(this->bmp_Calibration(this->fd) != 0) {
 			return -1;
 		}
 
-		this->bmp_GetTemperature(fd, &temperature);
-
-		close(fd);
+		this->bmp_GetTemperature(this->fd, &temperature);
 
 		return temperature;
+	}
+
+	bmp180::~bmp180() {
+		if(this->fd >= 0) {
+			close(this->fd);
+		}	
 	}

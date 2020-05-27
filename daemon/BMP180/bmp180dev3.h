@@ -15,21 +15,23 @@ const unsigned char BMPx8x_OverSampling = 3;
 class bmp180 {
 	// Calibration values - These are stored in the BMP085/180
 	private:
-		short int            bmp_ac1;
-		short int            bmp_ac2; 
-		short int            bmp_ac3; 
-		unsigned short int   bmp_ac4;
-		unsigned short int   bmp_ac5;
-		unsigned short int   bmp_ac6;
-		short int            bmp_b1; 
-		short int            bmp_b2;
-		int                  bmp_b5; 
-		short int            bmp_mb;
-		short int            bmp_mc;
-		short int            bmp_md;
+		short int            	bmp_ac1;
+		short int            	bmp_ac2; 
+		short int            	bmp_ac3; 
+		unsigned short int   	bmp_ac4;
+		unsigned short int   	bmp_ac5;
+		unsigned short int   	bmp_ac6;
+		short int            	bmp_b1; 
+		short int            	bmp_b2;
+		int                  	bmp_b5; 
+		short int            	bmp_mb;
+		short int            	bmp_mc;
+		short int            	bmp_md;
+		int										fd;
 
 	public:
-		bmp180					(void);
+		bmp180											(void);
+		int		i2c_Open							(char *I2CBusName);
 		int		bmp_ReadInt         	(int fd, uint8_t *devValues,uint8_t startReg,uint8_t bytesToRead);
 		int		bmp_WriteCmd        	(int fd, uint8_t devAction);
 		int		bmp_Calibration     	(int fd);
@@ -37,9 +39,10 @@ class bmp180 {
 		int		bmp_GetPressure      	(int fd, double *Pres);
 		int		bmp_GetTemperature   	(int fd, double *Temp);
 
-		double  bmp_altitude         	(double p);
-		double  bmp_qnh              	(double p,double StationAlt);
-		double  ppl_DensityAlt       	(double PAlt,double Temp);
+		double  bmp_altitude        (double p);
+		double  bmp_qnh             (double p,double StationAlt);
+		double  ppl_DensityAlt      (double PAlt,double Temp);
 		double	getRealPressure			(void);
 		double  getRealTemperature  (void);
+		~bmp180											(void);
 };

@@ -36,9 +36,13 @@
 #define UV_ANALOG_CHANNEL           2
 #define DUST_ANALOG_CHANNEL         1
 
-// Extrem known values: 870 - 370
+/* WATERING const 
+Extrem known values: 870 - 370
+*/
 #define SOIL_DRY_LIMIT              750
 #define SOIL_WET_LIMIT              600
+#define MAX_WATERING_DURATION_S     60*20   // 20min
+#define WATERING_COOLDOWN_S         60*60*3 // 3h
 
   using namespace std;
 
@@ -46,16 +50,22 @@
 #include "MCP3008/mcp3008Spi.h"
 #include "DHT22/dht22.h"
 
-/* BEGIN OF SENSOR VARIABLES */
-volatile unsigned int gcount = 0, currentPressureSeaLevel = 0;
+/* SENSOR VARIABLES */
+volatile unsigned int gcount = 0;
 volatile double currentPressure = 0, particuleLevel = 0, co2Level = 0;
 volatile float currentTemperature = 0, currentTemperature22 = 0, currentHygrometry = 0, uvLevel = 0, currentSoilMoisture = 0;
+
+/* DEVICES */
+dht22 dht(DHT22PIN);
+bmp180 *bmp;
+
+/* Others */
 bool firstSensingCycle = true;
 ofstream errorLogFile;
 ofstream logFile;
-dht22 dht(DHT22PIN);
-bmp180 *bmp;
-/* END OF MEASURE VARIABLES */
+volatile time_t last_watering_t = time(0);
+volatile time_t watering_started_since = NULL;
+volatile bool is_watering = false;
 
 const std::string nowStr(bool with_time = false) {
   time_t now = time(0);
@@ -120,7 +130,7 @@ std::vector<std::string> explode(std::string const & s, char delim){
   return result;
 }
 
-void falling_state(){
+void falling_state() {
   gcount++;
 }
 
@@ -148,7 +158,7 @@ const std::string getHeaders() {
 
 PI_THREAD(activeLed) {
   /* BLINK STATUS ! */
-  while(1){
+  while(1) {
     usleep(750000);
     digitalWrite(STATUS_LED_PIN, 0);
     usleep(100000);
@@ -158,17 +168,29 @@ PI_THREAD(activeLed) {
 
 PI_THREAD(wateringProcess) {
   /* Watering */
-  while(1){
-    if(currentSoilMoisture > SOIL_DRY_LIMIT) {
+  while(1) {
+    if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S) {
+      log("INFO", "Watering action launched.", false);
+      is_watering = true;
+      watering_started_since = time(0);
+
       digitalWrite(WATERING_PIN, 0);
-    } else if(currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0) { // Don't care about 0 value
+    } else if((currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0 && is_watering) || hasExceededPeriod()) {   // Don't care about 0 value
+      log("INFO", "Watering action stopped.", false);
+      is_watering = false;
+      last_watering_t = time(0);
+
       digitalWrite(WATERING_PIN, 1);
     }
     usleep(150000);
   }
 }
 
-bool record(ofstream &logFile, ofstream &errorLogFile){
+bool hasExceededPeriod() {
+  return (is_watering && difftime(time(0), watering_started_since) > MAX_WATERING_DURATION_S);
+}
+
+bool record(ofstream &logFile, ofstream &errorLogFile) {
   string logFilePath = "/var/www/data_" + nowStr() + ".log";
 
   logFile.open(logFilePath.c_str(), fstream::app);
@@ -191,7 +213,7 @@ int refreshSensorValues() {
       currentTemperature = bmp->getRealTemperature();
       currentPressure = bmp->getRealPressure();
     } catch(const std::runtime_error& e) {
-      log("Error", e.what());
+      log("ERROR", e.what());
 
       return -1;
     }    
@@ -266,7 +288,7 @@ int init() {
   return 0;
 }
 
-int main(void){
+int main(int argc, char const *argv[]) {
   time_t timer = time(0);
   int refresh_ret_code = 0;
   init();
