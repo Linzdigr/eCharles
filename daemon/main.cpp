@@ -64,7 +64,7 @@ bool firstSensingCycle = true;
 ofstream errorLogFile;
 ofstream logFile;
 volatile time_t last_watering_t = time(0);
-volatile time_t watering_started_since = NULL;
+volatile time_t watering_started_since = time(0);
 volatile bool is_watering = false;
 
 const std::string nowStr(bool with_time = false) {
