@@ -174,14 +174,14 @@ PI_THREAD(activeLed) {
 PI_THREAD(wateringProcess) {
   /* Watering */
   while(1) {
-    if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && (difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S || difftime(time(0), start_t) < WATERING_COOLDOWN_S)) {
-      log("INFO", "Watering action launched.", false);
+    if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && (difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S || difftime(time(0), start_t) < 5)) {
+      log("INFO", "Watering action launched.");
       is_watering = true;
       watering_started_since = time(0);
 
       digitalWrite(WATERING_PIN, 0);
     } else if((currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0 && is_watering) || hasExceededPeriod()) {   // Don't care about 0 value
-      log("INFO", "Watering action stopped.", false);
+      log("INFO", "Watering action stopped.");
       is_watering = false;
       last_watering_t = time(0);
 
