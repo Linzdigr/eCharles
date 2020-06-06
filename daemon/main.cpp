@@ -65,6 +65,7 @@ ofstream errorLogFile;
 ofstream logFile;
 volatile time_t last_watering_t = time(0);
 volatile time_t watering_started_since = time(0);
+volatile time_t start_t = time(0);
 volatile bool is_watering = false;
 
 const std::string nowStr(bool with_time = false) {
@@ -173,7 +174,7 @@ PI_THREAD(activeLed) {
 PI_THREAD(wateringProcess) {
   /* Watering */
   while(1) {
-    if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S) {
+    if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && (difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S) || difftime(time(0), start_t) < WATERING_COOLDOWN_S) {
       log("INFO", "Watering action launched.", false);
       is_watering = true;
       watering_started_since = time(0);
@@ -268,7 +269,7 @@ int init() {
   // For rev. 1 Model B pis:
   // BMP085 *bmp = new BMP085(oss, "/dev/i2c-0");
   if(bmp == NULL) {
-    cout << "BMP module not instancited !" << endl;
+    cout << "BMP module not instanciated !" << endl;
   }
 
   log("INFO", "External modules set.");
