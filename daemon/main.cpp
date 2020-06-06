@@ -181,7 +181,10 @@ PI_THREAD(wateringProcess) {
 
       digitalWrite(WATERING_PIN, 0);
     } else if((currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0 && is_watering) || hasExceededPeriod()) {   // Don't care about 0 value
-      log("INFO", "Watering action stopped with watering time " + difftime(time(0), watering_started_since_t) + " seconds.");
+      std::ostringstream strs;
+      strs << difftime(time(0), watering_started_since_t);
+      std::string w_sec_str = strs.str();
+      log("INFO", "Watering action stopped with watering time " + w_sec_str + " seconds.");
       is_watering = false;
       last_watering_t = time(0);
 
