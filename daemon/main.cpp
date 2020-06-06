@@ -64,7 +64,7 @@ bool firstSensingCycle = true;
 ofstream errorLogFile;
 ofstream logFile;
 volatile time_t last_watering_t = time(0);
-volatile time_t watering_started_since = time(0);
+volatile time_t watering_started_since_t = time(0);
 volatile time_t start_t = time(0);
 volatile bool is_watering = false;
 
@@ -158,7 +158,7 @@ const std::string getHeaders() {
 }
 
 bool hasExceededPeriod() {
-  return (is_watering && difftime(time(0), watering_started_since) > MAX_WATERING_DURATION_S);
+  return (is_watering && difftime(time(0), watering_started_since_t) > MAX_WATERING_DURATION_S);
 }
 
 PI_THREAD(activeLed) {
@@ -177,11 +177,11 @@ PI_THREAD(wateringProcess) {
     if(currentSoilMoisture > SOIL_DRY_LIMIT && !is_watering && (difftime(time(0), last_watering_t) > WATERING_COOLDOWN_S || difftime(time(0), start_t) < 5)) {
       log("INFO", "Watering action launched.");
       is_watering = true;
-      watering_started_since = time(0);
+      watering_started_since_t = time(0);
 
       digitalWrite(WATERING_PIN, 0);
     } else if((currentSoilMoisture < SOIL_WET_LIMIT && currentSoilMoisture > 0 && is_watering) || hasExceededPeriod()) {   // Don't care about 0 value
-      log("INFO", "Watering action stopped.");
+      log("INFO", "Watering action stopped with watering time " + difftime(time(0), watering_started_since_t) + " seconds.");
       is_watering = false;
       last_watering_t = time(0);
 
